@@ -39,7 +39,7 @@
 #    then
 #        /usr/local/bin/bt_slackware.sh START &
 #    fi
-#------------------------------------------------START
+#------------------------------------------------END
 #
 # and in /etc/rc.d/rc.local_shutdown
 # add something like this
@@ -48,7 +48,7 @@
 #    then
 #        /usr/local/bin/bt_slackware.sh STOP
 #    fi
-#------------------------------------------------START
+#------------------------------------------------END
 #
 # You can edit /etc/elogind/logind.conf
 #  add this line to disable sleep lid:
