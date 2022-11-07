@@ -1,0 +1,146 @@
+#!/bin/bash
+#
+# /etc/rc.d/rc.local:  Local system initialization script.
+#
+# Put any local startup commands in here.  Also, if you have
+# anything that needs to be run at shutdown time you can
+# make an /etc/rc.d/rc.local_shutdown script and put those
+# commands in there.
+
+
+#--- change to suite your needs,
+#    most people would use /usr/local/bin
+#    needed for: bu_vnstat.sh
+#                bt_slackware.sh
+#                create_local_set.sh
+g_jmc_local="/opt/jmc/bin"
+
+#--- my User ID and Group ID for /tmp/$USER dir creation
+g_jmc_id="jmccue"
+g_jmc_gr="jmccue"
+
+###############################################################################
+# start custom
+###############################################################################
+# this creates a pipe file for use with xconsole
+# you may want to add these lines are in /etc/syslog.conf
+#      kern.* |/usr/local/dev/xconsole
+#         OR
+#      kern.err |/usr/local/dev/xconsole
+#      authpriv.* |/usr/local/dev/xconsole
+#if test ! -p /usr/local/dev/xconsole
+#then
+#    echo "Creating /usr/local/dev/xconsole"
+#    mkfifo /usr/local/dev/xconsole
+#    chown root:wheel /usr/local/dev/xconsole
+#    chmod 660 /usr/local/dev/xconsole
+#    /etc/rc.d/rc.syslog restart
+#fi
+
+#--- Disable Turbo Mode
+#    file /sys/devices/system/cpu/intel_pstate/status
+#         needs to be passive or active
+#    see: https://lwn.net/Articles/897914/
+#         https://sleeplessbeastie.eu/2019/07/15/how-to-disable-intel-turbo-boost/
+#         https://news.ycombinator.com/item?id=31743110
+if test -f /sys/devices/system/cpu/intel_pstate/no_turbo
+then
+    echo "Disabling turbo-boost"
+    echo "1" > /sys/devices/system/cpu/intel_pstate/no_turbo
+fi
+
+#--- disable WoL (Wake-on LAN)
+#    to see if supported: # /usr/sbin/ethtool interface | grep Wake-on
+if test -x /usr/sbin/ethtool
+then
+    echo "Disabling WoL"
+    /usr/sbin/ethtool -s eth0 wol d
+fi
+
+#--- create tmp dirs for all valid users and other required dirs.
+#    Avoids SSD wear since /tmp is mounted as in /etc/fstab
+#           tmpfs /tmp tmpfs rw,nodev,nosuid,size=4G 0 0
+if test ! -d /tmp/root
+then
+    mkdir /tmp/root && chmod 700 /tmp/root
+    chown root:root /tmp/root
+fi
+if test -d /home/$g_jmc_id
+then
+    if test ! -d /tmp/$g_jmc_id
+    then
+	mkdir /tmp/$g_jmc_id && chmod 700 /tmp/$g_jmc_id
+	chown $g_jmc_id:$g_jmc_gr /tmp/$g_jmc_id
+    fi
+fi
+if test -d /home/prime
+then
+    if test ! -d /tmp/prime
+    then
+	mkdir /tmp/prime && chmod 700 /tmp/prime
+	chown prime:prime /tmp/prime
+    fi
+fi
+if test -d /home/dcomp
+then
+    if test ! -d /tmp/dcomp
+    then
+	mkdir /tmp/dcomp && chmod 700 /tmp/dcomp
+	chown dcomp:dcomp /tmp/dcomp
+    fi
+fi
+if test -d /home/pub
+then
+    if test ! -d /tmp/pub
+    then
+	mkdir /tmp/pub && chmod 700 /tmp/pub
+	chown pub:pub /tmp/pub
+    fi
+fi
+if test ! -d /tmp/airvpn
+then
+    mkdir /tmp/airvpn && chmod 770 /tmp/airvpn
+    chown root:airvpn /tmp/airvpn
+fi
+if test ! -d /run/airvpn
+then
+    mkdir /run/airvpn && chmod 775 /run/airvpn
+    chown airvpn:airvpn /run/airvpn
+fi
+
+#--- start background tasks
+if test -x /etc/rc.d/rc.vnstat
+then
+    if test ! -d /var/run/vnstat
+    then
+	mkdir /var/run/vnstat && chmod 755 /var/run/vnstat
+	chown vnstat:vnstat /var/run/vnstat
+    fi
+    if test -x $g_jmc_local/bu_vnstat.sh
+    then
+	$g_jmc_local/bu_vnstat.sh
+    fi
+    /etc/rc.d/rc.vnstat start
+fi
+
+#--- laptop do not start tor
+#if test -x /etc/rc.d/rc.tor
+#then
+#    /etc/rc.d/rc.tor start
+#fi
+
+#--- AirVPN Suite for Linux, must submit to background
+if test -x $g_jmc_local/bt_slackware.sh
+then
+    echo Submitting bluetit
+    $g_jmc_local/bt_slackware.sh START &
+fi
+
+#--- generate /etc/profile.d/jmccue-custom.csh and
+#             /etc/profile.d/jmccue-custom.sh
+if test -x $g_jmc_local/create_local_set.sh
+then
+    $g_jmc_local/create_local_set.sh
+fi
+
+### END

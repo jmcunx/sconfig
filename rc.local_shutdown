@@ -1,0 +1,88 @@
+#!/bin/sh
+#
+# /etc/rc.d/rc.local_shutdown:  Local system shutdown script.
+#
+
+#--- change to suite your needs,
+#    most people would use /usr/local/bin
+#    needed for: bu_vnstat.sh
+#                bt_slackware.sh
+g_jmc_local="/opt/jmc/bin"
+
+#--- Other items, change to suite your needs.
+#    Custom log file location to prevent multiple
+#    SSD writes.  These will be appended
+#    to the save dir on shutdown
+g_tmpfs_logs="/tmp/jmccue/logs"
+g_save_logs="/var/log/jmc_logs"
+
+#--- wireguard settings, in case you use wireguard
+g_dev_wg="wg0"
+g_wgcfg="/etc/wireguard/$g_dev_wg.conf"
+
+#-----------------------------------------------------------------------------
+# stop custom
+#-----------------------------------------------------------------------------
+if test -x $g_jmc_local/bt_slackware.sh
+then
+    echo Stopping VPN
+    $g_jmc_local/bt_slackware.sh STOP
+fi
+if test -x /usr/bin/wg-quick -a -f "$g_wgcfg"
+then
+    /sbin/ip a show $g_dev_wg > /dev/null 2>&1
+    if test "$?" -eq "0"
+    then
+	echo Stopping wireguard
+	/usr/bin/wg-quick down "$g_wgcfg"
+    fi
+fi
+
+#--- stop vnstat and backup databases
+if test -x /etc/rc.d/rc.vnstat
+then
+    echo "Stopping vnstat"
+    /etc/rc.d/rc.vnstat stop
+    if test -x $g_jmc_local/bu_vnstat.sh
+    then
+	$g_jmc_local/bu_vnstat.sh
+    fi
+fi
+
+#--- tor
+if test -x /etc/rc.d/rc.tor
+then
+    echo "Stopping tor"
+    /etc/rc.d/rc.tor stop
+fi
+
+#--- boinc, could be in one of these places
+if test -x /etc/rc.d/rc.boinc
+then
+    echo "Stopping boinc"
+    /etc/rc.d/rc.boinc stop
+fi
+if test -x /home/dcomp/bin/rc.dcomp
+then
+    echo "Stopping dcomp boinc"
+    /home/dcomp/bin/rc.dcomp stop
+fi
+
+#--- Great Internet Mersenne Prime Search
+if test -x /home/prime/bin/rc.prime
+then
+    echo "Stopping prime"
+    /home/prime/bin/rc.prime stop
+fi
+
+#--- save CPU temperature log from tmpfs
+if test -r $g_tmpfs_logs/log_cpu_temp.txt
+then
+    if test -d "$g_save_logs"
+    then
+        cat $g_tmpfs_logs/log_cpu_temp.txt \
+            >> "$g_save_logs/log_cpu_temp.txt"
+    fi
+fi
+
+### END
