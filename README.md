@@ -1,2 +1,3 @@
 # sconfig
-Slackware sepcific objects
+Slackware specific objects
+
