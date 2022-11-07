@@ -6,7 +6,6 @@
 #
 # >>> Set variable g_user_01 below to
 #     the user you want to enable xscreensaver
-#     and as the user that usually starts goldcrest
 #
 # script /lib64/elogind/system-sleep/10_sleep.sh
 # is needed something like what is below.
