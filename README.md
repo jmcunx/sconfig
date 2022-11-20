@@ -20,6 +20,10 @@ To backup
 databases on
 [Slackware](http://www.slackware.com/).
 
+## create\_local\_set.sh
+Set distro specific global environment variables for sh
+and csh on Linux.
+
 ## rc.local
 [Slackware](http://www.slackware.com/)
 Startup script on boot.
