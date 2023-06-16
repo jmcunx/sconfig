@@ -73,18 +73,37 @@ f_slack()
 	l_slack_hostname=`cat /etc/HOSTNAME`
 	l_slack_domain=`echo $l_slack_hostname | sed 's/\./%/' | awk 'BEGIN{FS="%"}{printf("%s",$2)}'`
     fi
+    if test "/tmp/\$USER"
+    then
+	TMPDIR="/tmp/\$USER"
+    else
+	TMPDIR="/tmp"
+    fi
 cat <<EOF >> "$g_cust_sh"
     OS=$OS
     HOST=$HOST
     HOSTNAME=$l_slack_hostname
     DOMAIN=$l_slack_domain
     export OS HOST HOSTNAME DOMAIN
+    TMPDIR=$TMPDIR
+    TMP=$TMPDIR
+    TEMPDIR=$TMPDIR
+    TEMP=$TMPDIR
+    TMUX_TMPDIR=$TMPDIR
+    RAMDISK=$TMPDIR
+    export TMPDIR TMP TEMPDIR TEMP TMUX_TMPDIR RAMDISK
 EOF
 cat <<EOF >> "$g_cust_csh"
-    setenv OS $OS
-    setenv HOST $HOST
-    setenv HOSTNAME $l_slack_hostname
-    setenv DOMAIN $l_slack_domain
+    setenv OS               $OS
+    setenv HOST             $HOST
+    setenv HOSTNAME         $l_slack_hostname
+    setenv DOMAIN           $l_slack_domain
+    setenv TMPDIR           $TMPDIR
+    setenv TMP              $TMPDIR
+    setenv TEMPDIR          $TMPDIR
+    setenv TEMP             $TMPDIR
+    setenv TMUX_TMPDIR      $TMPDIR
+    setenv RAMDISK          $TMPDIR
 EOF
 
     if test "$g_found_os" != "Y"
@@ -103,10 +122,10 @@ cat <<EOF >> "$g_cust_sh"
     export SLACK_VER SLACK_MAJOR SLACK_MINOR DISTRO
 EOF
 cat <<EOF >> "$g_cust_csh"
-    setenv SLACK_VER $VERSION_ID
-    setenv SLACK_MAJOR $l_slack_major
-    setenv SLACK_MINOR $l_slack_minor
-    setenv DISTRO $ID
+    setenv SLACK_VER        $VERSION_ID
+    setenv SLACK_MAJOR      $l_slack_major
+    setenv SLACK_MINOR      $l_slack_minor
+    setenv DISTRO           $ID
 EOF
 
 } # f_slack()
@@ -227,9 +246,9 @@ cat << EOF >> "$g_cust_sh"
     export SUDOACCESS IS_LAPTOP WORK_WORKSTATION
 EOF
 cat << EOF >> "$g_cust_csh"
-    setenv SUDOACCESS $l_spec_sudoaccess
+    setenv SUDOACCESS       $l_spec_sudoaccess
     setenv WORK_WORKSTATION $l_spec_work
-    setenv IS_LAPTOP $l_spec_laptop
+    setenv IS_LAPTOP        $l_spec_laptop
 EOF
 
 } # END: f_build_specific()
